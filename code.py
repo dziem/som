@@ -3,14 +3,23 @@ import sys
 import math
 import numpy as np
 import random 
+import copy
 
 #const
-tmax = 100
-epsilon0 = 0.01
-unit = 8
+tmax = 3000
+epsilon0 = 0.001
+unit = 15
 sigma0 = unit - 1
+min_random_range = 8
+max_random_range = 12
 
 #functions
+def print2d(a):
+	for row in a:
+		for elem in row:
+			print(elem, end=' ')
+		print()
+
 def fixText(text):
     row = []
     z = text.find(',')
@@ -63,16 +72,17 @@ map = []
 for i in range (0, unit):
 	new = []
 	for j in range (0, 2):
-		foo = random.uniform(3, 18)
+		foo = random.uniform(min_random_range, max_random_range)
 		new.append(foo)
 	map.append(new)
 rows_num = len(datas) - 1
-map_def = map #try bits
-print(map_def) #try bits
+map_def = copy.deepcopy(map) #try bits
+print2d(map_def) #try bits
 print('----------') #try bits
 t = 0
 while t < tmax:
 	random_index = random.randint(0,rows_num)
+	#random_index = t % rows_num
 	min_distance = euclid(map[0], datas[random_index])
 	min_index = 0
 	j = 0
@@ -82,12 +92,16 @@ while t < tmax:
 			min_distance = distance
 			min_index = j
 		j += 1
+	#update winner
+	map[min_index][0] = map[min_index][0] + epsilon(t) * neighbourhood(t, map[min_index], map[min_index]) * (map[min_index][0] - datas[random_index][0])
+	map[min_index][1] = map[min_index][1] + epsilon(t) * neighbourhood(t, map[min_index], map[min_index]) * (map[min_index][1] - datas[random_index][1])
 	#update all
 	for r in range (len(map)):
 		for c in range (len(map[r])):
-			map[r][c] = map[r][c] + epsilon(t) * neighbourhood(t, map[min_index], map[r]) * (map[r][c] - datas[random_index][c])
+			if(r != min_index):
+				map[r][c] = map[r][c] + epsilon(t) * neighbourhood(t, map[min_index], map[r]) * (map[r][c] - datas[random_index][c])
 	t += 1
-print(map)
+print2d(map)
 # Write CSV file
 
 kwargs = {'newline': ''}
@@ -99,4 +113,5 @@ if sys.version_info < (3, 0):
 with open('result.csv', mode, **kwargs) as fp:
     writer = csv.writer(fp, delimiter=',')
     writer.writerows(map)
-	
+    writer.writerows(' ')
+    writer.writerows(map_def)
