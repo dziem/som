@@ -6,20 +6,14 @@ import random
 import copy
 
 #const
-tmax = 3000
+tmax = 1000
 epsilon0 = 0.001
-unit = 15
+unit = 17
 sigma0 = unit - 1
-min_random_range = 8
-max_random_range = 12
+min_random_range = 9.5
+max_random_range = 10.5
 
 #functions
-def print2d(a):
-	for row in a:
-		for elem in row:
-			print(elem, end=' ')
-		print()
-
 def fixText(text):
     row = []
     z = text.find(',')
@@ -68,21 +62,52 @@ def neighbourhood(t, j, jbintang):
 data = np.array(createTuple('datasetcsv.csv'))
 datas = data.astype(np.float)
 #create map
-map = []             
-for i in range (0, unit):
+min = min_random_range
+max = max_random_range
+level = 1
+away_rate = 0.75
+map = []     
+new = [] 
+for j in range (0, 2):
+	foo = random.uniform(min, max)
+	new.append(foo)
+map.append(new)
+for i in range (0, 16):
 	new = []
+	min_range = min
+	max_range = max
+	pos = i % 8
+	if(i > 0):
+		if(pos == 0):
+			level += 4
 	for j in range (0, 2):
-		foo = random.uniform(min_random_range, max_random_range)
+		if (j == 0):
+			if(pos == 0 or pos == 1 or pos == 2):
+				min_range = min - (level * away_rate)
+				max_range = max - (level * away_rate)
+			elif(pos == 5 or pos == 6 or pos == 7):
+				min_range = min + (level * away_rate)
+				max_range = max + (level * away_rate)
+			else:
+				min_range = min
+				max_range = max
+		elif(j == 1):
+			if(pos == 0 or pos == 3 or pos == 5):
+				min_range = min + (level * away_rate)
+				max_range = max + (level * away_rate)
+			elif(pos == 2 or pos == 4 or pos == 7):
+				min_range = min - (level * away_rate)
+				max_range = max - (level * away_rate)
+			else:
+				min_range = min
+				max_range = max
+		foo = random.uniform(min_range, max_range)
 		new.append(foo)
 	map.append(new)
-rows_num = len(datas) - 1
-map_def = copy.deepcopy(map) #try bits
-print2d(map_def) #try bits
-print('----------') #try bits
 t = 0
+rows_num = len(datas) - 1
 while t < tmax:
 	random_index = random.randint(0,rows_num)
-	#random_index = t % rows_num
 	min_distance = euclid(map[0], datas[random_index])
 	min_index = 0
 	j = 0
@@ -101,7 +126,6 @@ while t < tmax:
 			if(r != min_index):
 				map[r][c] = map[r][c] + epsilon(t) * neighbourhood(t, map[min_index], map[r]) * (map[r][c] - datas[random_index][c])
 	t += 1
-print2d(map)
 # Write CSV file
 
 kwargs = {'newline': ''}
@@ -113,5 +137,3 @@ if sys.version_info < (3, 0):
 with open('result.csv', mode, **kwargs) as fp:
     writer = csv.writer(fp, delimiter=',')
     writer.writerows(map)
-    writer.writerows(' ')
-    writer.writerows(map_def)
